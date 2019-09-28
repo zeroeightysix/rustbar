@@ -39,9 +39,9 @@ fn activate(application: &gtk::Application) {
     content_box.add(&label);
     // window.set_border_width(12);
 
-    let date_widget = modules::date::create_widget();
+    let date_module = modules::date::create_widget();
 
-    content_box.add(&date_widget.widget);
+    content_box.add(&date_module.widget);
 
     window.add(&content_box);
 
