@@ -7,14 +7,6 @@ use super::module::Module;
 
 pub fn create_widget<'a>() -> Module<'a, Label, &'a str> {
 
-    Module {
-        widget: {
-            Label::new(Some("date"))
-        },
-        message_handler: &|msg| {
-            println!("{}", msg);
-        }
-    }
-
+    Module::new(Label::new(Some("date")), &|msg| println!("{}", msg))
 
 }

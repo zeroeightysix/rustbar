@@ -41,7 +41,7 @@ fn activate(application: &gtk::Application) {
 
     let date_module = modules::date::create_widget();
 
-    content_box.add(&date_module.widget);
+    content_box.add(date_module.get_widget());
 
     window.add(&content_box);
 
