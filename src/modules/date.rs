@@ -2,11 +2,19 @@ extern crate gio;
 extern crate gtk;
 extern crate glib;
 
-use gtk::Label;
+use gtk::{
+    Label,
+    LabelExt
+};
 use super::module::Module;
 
 pub fn create_widget<'a>() -> Module<'a, Label, &'a str> {
 
-    Module::new(Label::new(Some("date")), &|msg| println!("{}", msg))
+    let label = Label::new(Some("date"));
+
+    Module::new(label, &|m, msg| {
+        m.get_widget().set_text(msg);
+        println!("{}", msg)
+    })
 
 }
