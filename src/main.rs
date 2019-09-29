@@ -11,9 +11,7 @@ use gio::prelude::*;
 use gtk::{
     prelude::*,
 };
-
 use std::env::args;
-
 
 fn activate(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
@@ -39,11 +37,14 @@ fn activate(application: &gtk::Application) {
     content_box.add(&label);
     // window.set_border_width(12);
 
-    let date_module = modules::date::create_widget();
-
-    date_module.handle(&"Hello world");
-
+    let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+    let date_module = modules::date::create_widget(tx);
     content_box.add(date_module.get_widget());
+
+    rx.attach(None, move |text| {
+        date_module.handle(&text);
+        glib::Continue(true)
+    });
 
     window.add(&content_box);
 
