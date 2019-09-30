@@ -1,6 +1,7 @@
 extern crate gio;
 extern crate gtk;
 extern crate glib;
+extern crate chrono;
 
 use std::{
     thread,
@@ -10,6 +11,7 @@ use gtk::{
     Label,
     LabelExt
 };
+use chrono::Local;
 use glib::Sender;
 use super::module::Module;
 
@@ -18,13 +20,19 @@ pub fn create_widget<'a>(tx: Sender<String>) -> Module<'a, Label, String> {
     let label = Label::new(Some("date"));
 
     let _updater = thread::spawn(move || {
-        thread::sleep(time::Duration::from_secs(1));
-        tx.send(String::from("Hello world"))
+        loop {
+            let dt = Local::now();
+            let dt = dt.format("%c").to_string();
+            match tx.send(dt) {
+                Ok(_) => (),
+                Err(e) => panic!(e),
+            }
+            thread::sleep(time::Duration::from_secs(1));
+        }
     });
 
     Module::new(label, &|m, msg| {
         m.get_widget().set_text(msg);
-        println!("{}", msg)
     })
 
 }

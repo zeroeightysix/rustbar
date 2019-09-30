@@ -11,9 +11,13 @@ use gio::prelude::*;
 use gtk::{
     prelude::*,
 };
-use std::env::args;
+use std::{
+    vec::Vec,
+    env::args
+};
 
 fn activate(application: &gtk::Application) {
+
     let window = gtk::ApplicationWindow::new(application);
 
     window.connect_delete_event(|_, _| {
@@ -33,18 +37,35 @@ fn activate(application: &gtk::Application) {
 
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
 
-    let label = gtk::Label::new(Some("Hello world!"));
-    content_box.add(&label);
-    // window.set_border_width(12);
+    let mut module_names = Vec::new();
+    module_names.push("date");
 
-    let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
-    let date_module = modules::date::create_widget(tx);
-    content_box.add(date_module.get_widget());
+    for module_name in module_names {
+        // Create a receiver and sender for this module.
+        // The sender is given to the module. It is free to create a thread that sends to this sender at any time.
+        // Because GTK is not thread-safe, the module cannot modify its widget(s) on the seperate thread.
+        let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
-    rx.attach(None, move |text| {
-        date_module.handle(&text);
-        glib::Continue(true)
-    });
+        let module = match module_name {
+            "date" => Some(modules::date::create_widget(tx)),
+            _ => None,
+        };
+
+        if module.is_none() {
+            continue;
+        };
+
+        let module = module.unwrap();
+
+        content_box.add(module.get_widget());
+
+        // If we receive anything from the receiver we just made, pass it back to the module.
+        // It can then handle this message on the GTK main thread (this thread), thus is able to modify the widget(s) it made.
+        rx.attach(None, move |text| {
+            module.handle(&text);
+            glib::Continue(true)
+        });
+    }
 
     window.add(&content_box);
 
@@ -53,6 +74,7 @@ fn activate(application: &gtk::Application) {
 }
 
 fn main() {
+
     let application = gtk::Application::new(Some("me.zeroeightsix.rustbar"), Default::default())
         .expect("Initialisation failed");
 
