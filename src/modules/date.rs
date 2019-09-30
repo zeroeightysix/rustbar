@@ -21,8 +21,7 @@ pub fn create_module<'a>(tx: Sender<String>) -> Module<'a, Label, String> {
 
     thread::spawn(move || {
         loop {
-            let dt = Local::now();
-            let dt = dt.format("%c").to_string();
+            let dt = Local::now().format("%c").to_string();
             match tx.send(dt) {
                 Ok(_) => (),
                 Err(e) => panic!(e),
