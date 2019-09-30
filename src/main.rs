@@ -1,6 +1,7 @@
 mod modules {
     pub mod date;
     pub mod module;
+    pub mod hello_world;
 }
 
 extern crate gtk;
@@ -39,6 +40,7 @@ fn activate(application: &gtk::Application) {
 
     let mut module_names = Vec::new();
     module_names.push("date");
+    module_names.push("hello_world");
 
     for module_name in module_names {
         // Create a receiver and sender for this module.
@@ -47,15 +49,13 @@ fn activate(application: &gtk::Application) {
         let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
         let module = match module_name {
-            "date" => Some(modules::date::create_widget(tx)),
-            _ => None,
+            "date" => modules::date::create_module(tx),
+            "hello_world" => modules::hello_world::create_module(tx),
+            _ => {
+                println!("Skipping unknown module {}.", module_name);
+                continue
+            },
         };
-
-        if module.is_none() {
-            continue;
-        };
-
-        let module = module.unwrap();
 
         content_box.add(module.get_widget());
 

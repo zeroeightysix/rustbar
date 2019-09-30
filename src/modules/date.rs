@@ -15,11 +15,11 @@ use chrono::Local;
 use glib::Sender;
 use super::module::Module;
 
-pub fn create_widget<'a>(tx: Sender<String>) -> Module<'a, Label, String> {
+pub fn create_module<'a>(tx: Sender<String>) -> Module<'a, Label, String> {
 
     let label = Label::new(Some("date"));
 
-    let _updater = thread::spawn(move || {
+    thread::spawn(move || {
         loop {
             let dt = Local::now();
             let dt = dt.format("%c").to_string();
