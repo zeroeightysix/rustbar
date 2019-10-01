@@ -1,0 +1,3 @@
+[submodule "gtk-layer-shell-rs"]
+	path = gtk-layer-shell-rs
+	url = https://github.com/subgraph/gtk-layer-shell-rs.git
