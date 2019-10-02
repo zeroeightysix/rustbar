@@ -3,10 +3,13 @@ mod modules {
     pub mod module;
     pub mod hello_world;
 }
+pub mod config;
 
 extern crate gtk;
 extern crate gio;
 extern crate gtk_layer_shell_rs as gtk_layer_shell;
+extern crate serde;
+extern crate json5;
 
 use gio::prelude::*;
 use gtk::{
@@ -16,6 +19,7 @@ use std::{
     vec::Vec,
     env::args
 };
+use config::Config;
 
 fn activate(application: &gtk::Application) {
 
@@ -37,6 +41,13 @@ fn activate(application: &gtk::Application) {
     gtk_layer_shell::set_anchor(&window, gtk_layer_shell::Edge::Top, true);
 
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
+
+    let c: Config = match Config::from_file("config.json5") {
+        Ok(c) => c,
+        Err(e) => panic!(e),
+    };
+
+    println!("{:?}", c);
 
     let mut module_names = Vec::new();
     module_names.push("date");
@@ -61,8 +72,8 @@ fn activate(application: &gtk::Application) {
 
         // If we receive anything from the receiver we just made, pass it back to the module.
         // It can then handle this message on the GTK main thread (this thread), thus is able to modify the widget(s) it made.
-        rx.attach(None, move |text| {
-            module.handle(&text);
+        rx.attach(None, move |message| {
+            module.handle(&message);
             glib::Continue(true)
         });
     }
