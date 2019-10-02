@@ -13,7 +13,7 @@ The application is not useful yet.
 This project aims to go further than that and provide an experience more like plasma's taskbar, or windows' taskbar, where components offer the functionality to edit them in the GUI itself, etc.
 
 ## Compile
-Assuming you have `git` and `cargo` installed:
+Assuming you have `git`, `cargo` and [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) installed:
 ```
 git clone https://github.com/zeroeightysix/rustbar
 cargo build --release
