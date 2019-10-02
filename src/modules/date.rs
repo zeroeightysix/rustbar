@@ -2,6 +2,7 @@ extern crate gio;
 extern crate gtk;
 extern crate glib;
 extern crate chrono;
+extern crate serde;
 
 use std::{
     thread,
@@ -14,14 +15,26 @@ use gtk::{
 use chrono::Local;
 use glib::Sender;
 use super::module::Module;
+use serde::Deserialize;
 
-pub fn create_module<'a>(tx: Sender<String>) -> Module<'a, Label, String> {
+#[derive(Deserialize, Debug, PartialEq)]
+pub struct ConfigExtra {
+    format: Option<String>,
+}
 
+pub fn create_module<'a>(tx: Sender<String>, extra: Option<ConfigExtra>) -> Module<'a, Label, String> {
     let label = Label::new(Some("date"));
+
+    let mut format = String::from("%c");
+    if let Some(extra) = extra {
+        if let Some(extra_format) = extra.format {
+            format = extra_format;
+        }
+    }
 
     thread::spawn(move || {
         loop {
-            let dt = Local::now().format("%c").to_string();
+            let dt = Local::now().format(format.as_ref()).to_string();
             match tx.send(dt) {
                 Ok(_) => (),
                 Err(e) => panic!(e),

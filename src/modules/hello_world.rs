@@ -16,21 +16,16 @@ use gtk::{
 };
 
 #[derive(Deserialize, Debug, PartialEq)]
-struct ConfigExtra {
+pub struct ConfigExtra {
     wait: Option<usize>,
 }
 
-pub fn create_module<'a>(tx: Sender<String>, extra: Option<serde_json::Value>) -> Module<'a, Label, String> {
+pub fn create_module<'a>(tx: Sender<String>, extra: Option<ConfigExtra>) -> Module<'a, Label, String> {
     let mut wait = 2;
 
-    if let Some(json_value) = extra {
-        match serde_json::from_value::<ConfigExtra>(json_value) {
-            Ok(extra) => {
-                if let Some(extra_wait) = extra.wait {
-                    wait = extra_wait;
-                }
-            },
-            Err(_) => panic!(),
+    if let Some(extra) = extra {
+        if let Some(extra_wait) = extra.wait {
+            wait = extra_wait;
         }
     }
 

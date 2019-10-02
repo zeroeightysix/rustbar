@@ -24,6 +24,18 @@ use config::{
     Config,
 };
 
+fn unpack_extra<T>(extra: Option<serde_json::Value>) -> Option<T>
+where for<'de> T: serde::Deserialize<'de>
+{
+    match extra {
+        Some(value) => match serde_json::from_value(value) {
+            Ok(extra) => Some(extra),
+            Err(_) => None
+        },
+        None => None
+    }
+}
+
 fn activate(application: &gtk::Application) {
 
     let window = gtk::ApplicationWindow::new(application);
@@ -61,8 +73,8 @@ fn activate(application: &gtk::Application) {
         let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
         let module = match module_name.as_ref() {
-            "date" => modules::date::create_module(tx),
-            "hello_world" => modules::hello_world::create_module(tx, extra),
+            "date" => modules::date::create_module(tx, unpack_extra(extra)),
+            "hello_world" => modules::hello_world::create_module(tx, unpack_extra(extra)),
             _ => {
                 println!("Skipping unknown module {}.", module_name);
                 continue
