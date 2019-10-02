@@ -1,10 +1,12 @@
 extern crate serde;
 extern crate json5;
+extern crate gtk;
 
 use std::{
     io::prelude::*,
     fs::File,
 };
+use gtk::Align;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -17,15 +19,30 @@ pub enum ConfigAlign {
     Baseline
 }
 
+impl ConfigAlign {
+    pub fn to_gtk(&self) -> Align {
+        match self {
+            ConfigAlign::Fill => gtk::Align::Fill,
+            ConfigAlign::Start => gtk::Align::Start,
+            ConfigAlign::End => gtk::Align::End,
+            ConfigAlign::Center => gtk::Align::Center,
+            ConfigAlign::Baseline => gtk::Align::Baseline,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct ConfigModule {
-    name: String,
-    align: Option<ConfigAlign>,
+    pub name: String,
+    pub align: Option<ConfigAlign>,
+    pub expand: Option<bool>,
+    pub margin_start: Option<i32>,
+    pub margin_end: Option<i32>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Config {
-    modules: Vec<ConfigModule>,
+    pub modules: Vec<ConfigModule>,
 }
 
 impl Config {
