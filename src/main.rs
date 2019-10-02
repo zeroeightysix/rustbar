@@ -1,4 +1,4 @@
-mod modules {
+pub mod modules {
     pub mod date;
     pub mod module;
     pub mod hello_world;
@@ -53,6 +53,7 @@ fn activate(application: &gtk::Application) {
 
     for config_module in c.modules {
         let module_name = config_module.name;
+        let extra = config_module.extra;
 
         // Create a receiver and sender for this module.
         // The sender is given to the module. It is free to create a thread that sends to this sender at any time.
@@ -61,7 +62,7 @@ fn activate(application: &gtk::Application) {
 
         let module = match module_name.as_ref() {
             "date" => modules::date::create_module(tx),
-            "hello_world" => modules::hello_world::create_module(tx),
+            "hello_world" => modules::hello_world::create_module(tx, extra),
             _ => {
                 println!("Skipping unknown module {}.", module_name);
                 continue

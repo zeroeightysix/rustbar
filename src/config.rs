@@ -1,4 +1,5 @@
 extern crate serde;
+extern crate serde_json;
 extern crate json5;
 extern crate gtk;
 
@@ -38,6 +39,7 @@ pub struct ConfigModule {
     pub expand: Option<bool>,
     pub margin_start: Option<i32>,
     pub margin_end: Option<i32>,
+    pub extra: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
