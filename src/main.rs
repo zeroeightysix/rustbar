@@ -58,7 +58,7 @@ fn activate(application: &gtk::Application) {
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
 
-    let c: Config = match Config::from_file("config.json5") {
+    let c: Config = match Config::from_path("config.json5") {
         Ok(c) => c,
         Err(e) => panic!(e),
     };

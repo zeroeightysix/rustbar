@@ -48,7 +48,7 @@ pub struct Config {
 }
 
 impl Config {
-    fn read_file(path: &str) -> Result<String, std::io::Error> {
+    fn read_path(path: &str) -> Result<String, std::io::Error> {
         match File::open(path) {
             Ok(mut file) => {
                 let mut content = String::new();
@@ -61,8 +61,8 @@ impl Config {
         }
     }
 
-    pub fn from_file(path: &str) -> Result<Config, String> {
-        let content = match Config::read_file(path) {
+    pub fn from_path(path: &str) -> Result<Config, String> {
+        let content = match Config::read_path(path) {
             Ok(content) => content,
             Err(e) => return Err(e.to_string()),
         };
