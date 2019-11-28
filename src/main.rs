@@ -103,7 +103,7 @@ fn activate(application: &gtk::Application) {
         match module_name.as_ref() {
             "date" => {
                 let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
-                let module = DateModule::new(tx);
+                let module = DateModule::new(tx, extra);
                 module.add_widget(&content_box);
                 rx.attach(None, move |message: String| {
                     DateModule::handle_message(&module, message);
