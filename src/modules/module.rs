@@ -1,25 +1,38 @@
-extern crate gtk;
+extern crate glib;
 
-use gtk::WidgetExt;
+use glib::Sender;
+use gtk::{Label, ContainerExt};
+use std::thread;
+use std::time;
+use gtk::LabelExt;
 
-pub struct Module<'a, T, M> where T: WidgetExt {
-    widget: T,
-    message_handler: &'a Fn(&Self, &M),
+pub trait Module {
+    fn add_widget(&self, container: &gtk::Box);
 }
 
-impl<'a, 'b, T: WidgetExt, M> Module<'a, T, M> {
-    pub fn get_widget(&self) -> &T {
-        &self.widget
-    }
+pub struct DateModule {
+    widget: Label
+}
 
-    pub fn handle(&self, message: &'b M) {
-        (self.message_handler)(self, message);
-    }
-
-    pub fn new(widget: T, handler: &'a Fn(&Module<'a, T, M>, &M)) -> Module<'a, T, M> {
-        Module {
-            widget: widget,
-            message_handler: handler
+impl DateModule {
+    pub fn new(tx: Sender<String>) -> DateModule {
+        let label = gtk::Label::new(Some("date"));
+        thread::spawn(move || {
+            thread::sleep(time::Duration::new(5, 0));
+            tx.send(String::from("Hello world!"))
+        });
+        DateModule {
+            widget: label
         }
+    }
+
+    pub fn handle_message(module: &DateModule, message: String) {
+        module.widget.set_text(message.as_ref());
+    }
+}
+
+impl Module for DateModule {
+    fn add_widget(&self, container: &gtk::Box) {
+        container.add(&self.widget);
     }
 }

@@ -42,8 +42,26 @@ pub struct ConfigModule {
     pub extra: Option<serde_json::Value>,
 }
 
+#[derive (Deserialize, Debug, PartialEq)]
+pub struct ConfigMargins {
+    pub top: Option<i32>,
+    pub bottom: Option<i32>,
+    pub left: Option<i32>,
+    pub right: Option<i32>,
+}
+
+#[derive (Deserialize, Debug, PartialEq)]
+pub struct ConfigAnchors {
+    pub top: Option<bool>,
+    pub bottom: Option<bool>,
+    pub left: Option<bool>,
+    pub right: Option<bool>,
+}
+
 #[derive(Deserialize, Debug, PartialEq)]
 pub struct Config {
+    pub margins: Option<ConfigMargins>,
+    pub anchors: Option<ConfigAnchors>,
     pub modules: Vec<ConfigModule>,
 }
 
