@@ -11,12 +11,6 @@ use gtk::{
     WidgetExt,
 };
 
-use modules::module::*;
-
-pub mod modules {
-    pub mod module;
-}
-
 // upgrade weak reference or return
 #[macro_export]
 macro_rules! upgrade_weak {
