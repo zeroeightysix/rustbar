@@ -5,9 +5,9 @@ use std::{
     vec::Vec,
 };
 
+use futures::executor::block_on;
 use gio::prelude::*;
 use gtk::{ApplicationWindow, prelude::*, WidgetExt};
-use tokio::prelude::*;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -29,13 +29,13 @@ async fn main() {
         .expect("Initialisation failed");
 
     application.connect_activate(|app| {
-        activate(app);
+        block_on(activate(app));
     });
 
     application.run(&args().collect::<Vec<_>>());
 }
 
-fn activate(application: &gtk::Application) {
+async fn activate(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
 
     window.connect_delete_event(|_, _| {

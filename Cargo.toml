@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 gtk-layer-shell-rs = { path = "gtk-layer-shell-rs/" }
 tokio = { version = "0.2.21", features = ["macros", "rt-threaded"] }
+futures = "0.3.5"
 
 [dependencies.gtk]
 git = "https://github.com/gtk-rs/gtk"
