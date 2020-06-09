@@ -7,6 +7,7 @@ use std::{
 
 use gio::prelude::*;
 use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+use tokio::prelude::*;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -22,7 +23,8 @@ macro_rules! upgrade_weak {
     };
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let application = gtk::Application::new(Some("me.zeroeightsix.rustbar"), Default::default())
         .expect("Initialisation failed");
 
