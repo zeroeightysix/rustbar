@@ -9,6 +9,7 @@ use futures::executor::block_on;
 use gio::prelude::*;
 use gtk::{ApplicationWindow, prelude::*, WidgetExt, Label};
 use tokio::time::delay_for;
+use chrono::Local;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -69,21 +70,20 @@ async fn activate(application: &gtk::Application) {
 }
 
 async fn create_date_module(date_label: Label) -> Box<dyn FnMut()> {
-    let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
-    let idle_func = move || {
-        if let Ok(t) = rx.try_recv() {
-            date_label.set_text(format!("{}", t).as_str());
-        }
-    };
-
+    let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);
     tokio::spawn(async move {
-        let mut c = 0;
         loop {
             delay_for(tokio::time::Duration::from_secs(1)).await;
-            c += 1;
-            let _ = tx.send(c).await;
+            let date = Local::now();
+            let _ = tx.send(format!("{}", date.format("%H:%M:%S"))).await;
         }
     });
+
+    let idle_func = move || {
+        if let Ok(s) = rx.try_recv() {
+            date_label.set_text(s.as_str());
+        }
+    };
 
     Box::new(idle_func)
 }
