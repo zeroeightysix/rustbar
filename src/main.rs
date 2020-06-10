@@ -2,7 +2,6 @@ extern crate gtk_layer_shell_rs as gtk_layer_shell;
 
 use std::{
     env::args,
-    fs::File,
     vec::Vec,
 };
 use std::path::Path;
@@ -13,13 +12,13 @@ use gtk::{ApplicationWindow, prelude::*, WidgetExt};
 use serde_json::json;
 
 use crate::{
+    config::Config,
     modules::{
         date::DateModule,
         module::Module,
-    }
+    },
+    modules::hello::HelloModule,
 };
-use crate::config::Config;
-use crate::modules::hello::HelloModule;
 
 mod modules;
 mod config;
@@ -60,12 +59,12 @@ macro_rules! add_module {
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let cfg_path = Path::new("config.json");
+    let cfg_path = Path::new("config.json5");
     let cfg = if !cfg_path.exists() {
-        serde_json::from_value(json!({}))
+        serde_json::from_value(json!({}))?
     } else {
-        serde_json::from_reader(File::open(cfg_path)?)
-    }?;
+        json5::from_str::<Config>(std::fs::read_to_string(cfg_path).unwrap().as_str()).unwrap()
+    };
 
     let application = gtk::Application::new(Some("me.zeroeightsix.rustbar"), Default::default())
         .expect("Initialisation failed");
