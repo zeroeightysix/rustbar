@@ -19,6 +19,7 @@ use crate::{
     }
 };
 use crate::config::Config;
+use crate::modules::hello::HelloModule;
 
 mod modules;
 mod config;
@@ -35,6 +36,25 @@ macro_rules! upgrade_weak {
     ($x:ident) => {
         upgrade_weak!($x, ())
     };
+}
+
+macro_rules! add_module {
+    (
+        $cb:expr,
+        $fn:expr,
+        $in:expr,
+        $(
+            $name:expr => $m:ident
+        );*
+    ) => {
+        $(
+            if $in == $name {
+                let (f, w) = $m::new().into_widget_handler().await;
+                $fn.push(f);
+                $cb.add(&w);
+            }
+        )*
+    }
 }
 
 #[tokio::main]
@@ -72,9 +92,16 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
     content_box.set_halign(gtk::Align::Fill);
 
     let mut idle_functions = Vec::new();
-    let (f, w) = DateModule::new().into_widget_handler().await;
-    idle_functions.push(f);
-    content_box.add(&w);
+
+    for v in &cfg.modules {
+        let name = &v["name"];
+        if let Some(name) = name.as_str() {
+            add_module!(content_box, idle_functions, name,
+                "date" => DateModule;
+                "hello" => HelloModule
+            );
+        }
+    }
 
     window.add(&content_box);
 
