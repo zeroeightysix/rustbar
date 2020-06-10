@@ -10,7 +10,11 @@ pub struct DateModule {}
 
 #[async_trait]
 impl Module<Label> for DateModule {
-    async fn create_module() -> (Box<dyn FnMut()>, Label) {
+    fn new() -> Self {
+        DateModule {}
+    }
+
+    async fn into_widget_handler(self) -> (Box<dyn FnMut()>, Label) {
         let date_label = gtk::Label::new(None);
 
         let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);

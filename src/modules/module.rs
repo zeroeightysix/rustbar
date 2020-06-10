@@ -5,5 +5,6 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait Module<W>
     where W: IsA<Widget> {
-    async fn create_module() -> (Box<dyn FnMut()>, W);
+    fn new() -> Self;
+    async fn into_widget_handler(self) -> (Box<dyn FnMut()>, W);
 }

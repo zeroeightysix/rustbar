@@ -72,7 +72,7 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
     content_box.set_halign(gtk::Align::Fill);
 
     let mut idle_functions = Vec::new();
-    let (f, w) = DateModule::create_module().await;
+    let (f, w) = DateModule::new().into_widget_handler().await;
     idle_functions.push(f);
     content_box.add(&w);
 
