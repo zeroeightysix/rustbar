@@ -1,7 +1,11 @@
 {
   "modules": [
     {
-      "name": "date"
+      "name": "date",
+      "format": "%m"
+    },
+    {
+      "name": "hello"
     }
   ]
 }

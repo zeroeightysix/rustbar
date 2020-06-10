@@ -40,16 +40,17 @@ macro_rules! upgrade_weak {
 
 macro_rules! add_module {
     (
+        $nm:expr,
         $cb:expr,
         $fn:expr,
-        $in:expr,
+        $js:expr,
         $(
             $name:expr => $m:ident
         );*
     ) => {
         $(
-            if $in == $name {
-                let (f, w) = $m::new().into_widget_handler().await;
+            if $nm == $name {
+                let (f, w) = $m::from_value($js).into_widget_handler().await;
                 $fn.push(f);
                 $cb.add(&w);
             }
@@ -96,7 +97,7 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
     for v in &cfg.modules {
         let name = &v["name"];
         if let Some(name) = name.as_str() {
-            add_module!(content_box, idle_functions, name,
+            add_module!(name, content_box, idle_functions, v,
                 "date" => DateModule;
                 "hello" => HelloModule
             );
