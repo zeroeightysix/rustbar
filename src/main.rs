@@ -50,8 +50,18 @@ async fn activate(application: &gtk::Application) {
     content_box.set_halign(gtk::Align::Fill);
 
     let date_label = gtk::Label::new(Some("Hello world!"));
+    content_box.add(&date_label);
+
+    let mut idle_functions = Vec::new();
 
     let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
+    let idle_func = move || {
+        if let Ok(t) = rx.try_recv() {
+            date_label.set_text(format!("{}", t).as_str());
+        }
+    };
+    idle_functions.push(idle_func);
+
     tokio::spawn(async move {
         let mut c = 0;
         loop {
@@ -60,13 +70,12 @@ async fn activate(application: &gtk::Application) {
             let _ = tx.send(c).await;
         }
     });
-    content_box.add(&date_label);
 
     window.add(&content_box);
 
     gtk::idle_add(move || {
-        if let Ok(t) = rx.try_recv() {
-            date_label.set_text(format!("{}", t).as_str());
+        for f in idle_functions.iter_mut() {
+            f();
         }
 
         Continue(true)
