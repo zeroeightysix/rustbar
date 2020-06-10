@@ -8,6 +8,7 @@ use std::{
 use futures::executor::block_on;
 use gio::prelude::*;
 use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+use tokio::time::delay_for;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -48,7 +49,28 @@ async fn activate(application: &gtk::Application) {
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
 
+    let date_label = gtk::Label::new(Some("Hello world!"));
+
+    let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
+    tokio::spawn(async move {
+        let mut c = 0;
+        loop {
+            delay_for(tokio::time::Duration::from_secs(1)).await;
+            c += 1;
+            let _ = tx.send(c).await;
+        }
+    });
+    content_box.add(&date_label);
+
     window.add(&content_box);
+
+    gtk::idle_add(move || {
+        if let Ok(t) = rx.try_recv() {
+            date_label.set_text(format!("{}", t).as_str());
+        }
+
+        Continue(true)
+    });
 
     window.show_all();
 }
