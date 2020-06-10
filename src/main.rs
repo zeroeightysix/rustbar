@@ -7,9 +7,16 @@ use std::{
 
 use futures::executor::block_on;
 use gio::prelude::*;
-use gtk::{ApplicationWindow, prelude::*, WidgetExt, Label};
-use tokio::time::delay_for;
-use chrono::Local;
+use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+
+use crate::{
+    modules::{
+        date::DateModule,
+        module::Module,
+    }
+};
+
+mod modules;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -51,7 +58,7 @@ async fn activate(application: &gtk::Application) {
     content_box.set_halign(gtk::Align::Fill);
 
     let mut idle_functions = Vec::new();
-    let (f, w) = create_date_module().await;
+    let (f, w) = DateModule::create_module().await;
     idle_functions.push(f);
     content_box.add(&w);
 
@@ -64,28 +71,6 @@ async fn activate(application: &gtk::Application) {
     });
 
     window.show_all();
-}
-
-async fn create_date_module() -> (Box<dyn FnMut()>, Label) {
-    let date_label = gtk::Label::new(None);
-
-    let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);
-    tokio::spawn(async move {
-        loop {
-            let date = Local::now();
-            let _ = tx.send(format!("{}", date.format("%H:%M:%S"))).await;
-            delay_for(tokio::time::Duration::from_secs(1)).await;
-        }
-    });
-
-    let label = date_label.clone();
-    let idle_func = move || {
-        if let Ok(s) = rx.try_recv() {
-            label.set_text(s.as_str());
-        }
-    };
-
-    (Box::new(idle_func), date_label)
 }
 
 fn init_layer_shell(window: &ApplicationWindow) {
