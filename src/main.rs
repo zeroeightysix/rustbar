@@ -50,7 +50,7 @@ async fn activate(application: &gtk::Application) {
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
 
-    let date_label = gtk::Label::new(Some("Hello world!"));
+    let date_label = gtk::Label::new(None);
     content_box.add(&date_label);
 
     let mut idle_functions = Vec::new();
@@ -73,9 +73,9 @@ async fn create_date_module(date_label: Label) -> Box<dyn FnMut()> {
     let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);
     tokio::spawn(async move {
         loop {
-            delay_for(tokio::time::Duration::from_secs(1)).await;
             let date = Local::now();
             let _ = tx.send(format!("{}", date.format("%H:%M:%S"))).await;
+            delay_for(tokio::time::Duration::from_secs(1)).await;
         }
     });
 
