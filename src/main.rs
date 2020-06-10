@@ -2,12 +2,15 @@ extern crate gtk_layer_shell_rs as gtk_layer_shell;
 
 use std::{
     env::args,
+    fs::File,
     vec::Vec,
 };
+use std::path::Path;
 
 use futures::executor::block_on;
 use gio::prelude::*;
 use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+use serde_json::json;
 
 use crate::{
     modules::{
@@ -15,8 +18,10 @@ use crate::{
         module::Module,
     }
 };
+use crate::config::Config;
 
 mod modules;
+mod config;
 
 // upgrade weak reference or return
 #[macro_export]
@@ -33,18 +38,27 @@ macro_rules! upgrade_weak {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), std::io::Error> {
+    let cfg_path = Path::new("config.json");
+    let cfg = if !cfg_path.exists() {
+        serde_json::from_value(json!({}))
+    } else {
+        serde_json::from_reader(File::open(cfg_path)?)
+    }?;
+
     let application = gtk::Application::new(Some("me.zeroeightsix.rustbar"), Default::default())
         .expect("Initialisation failed");
 
-    application.connect_activate(|app| {
-        block_on(activate(app));
+    application.connect_activate(move |app| {
+        block_on(activate(app, &cfg));
     });
 
     application.run(&args().collect::<Vec<_>>());
+
+    Ok(())
 }
 
-async fn activate(application: &gtk::Application) {
+async fn activate(application: &gtk::Application, cfg: &Config) {
     let window = gtk::ApplicationWindow::new(application);
 
     window.connect_delete_event(|_, _| {
@@ -52,7 +66,7 @@ async fn activate(application: &gtk::Application) {
         Inhibit(false)
     });
 
-    init_layer_shell(&window);
+    init_layer_shell(&window, cfg);
 
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
@@ -73,18 +87,18 @@ async fn activate(application: &gtk::Application) {
     window.show_all();
 }
 
-fn init_layer_shell(window: &ApplicationWindow) {
+fn init_layer_shell(window: &ApplicationWindow, cfg: &Config) {
     gtk_layer_shell::init_for_window(window);
     gtk_layer_shell::set_layer(window, gtk_layer_shell::Layer::Top);
     gtk_layer_shell::auto_exclusive_zone_enable(window);
 
-    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Top, 0);
-    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Bottom, 0);
-    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Left, 0);
-    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Right, 0);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Top, cfg.margins.top);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Bottom, cfg.margins.bottom);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Left, cfg.margins.left);
+    gtk_layer_shell::set_margin(window, gtk_layer_shell::Edge::Right, cfg.margins.right);
 
-    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Top, true);
-    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Bottom, false);
-    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Left, true);
-    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Right, true);
+    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Top, cfg.anchors.top);
+    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Bottom, cfg.anchors.bottom);
+    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Left, cfg.anchors.left);
+    gtk_layer_shell::set_anchor(window, gtk_layer_shell::Edge::Right, cfg.anchors.right);
 }
