@@ -50,11 +50,10 @@ async fn activate(application: &gtk::Application) {
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
 
-    let date_label = gtk::Label::new(None);
-    content_box.add(&date_label);
-
     let mut idle_functions = Vec::new();
-    idle_functions.push(create_date_module(date_label).await);
+    let (f, w) = create_date_module().await;
+    idle_functions.push(f);
+    content_box.add(&w);
 
     window.add(&content_box);
 
@@ -67,7 +66,9 @@ async fn activate(application: &gtk::Application) {
     window.show_all();
 }
 
-async fn create_date_module(date_label: Label) -> Box<dyn FnMut()> {
+async fn create_date_module() -> (Box<dyn FnMut()>, Label) {
+    let date_label = gtk::Label::new(None);
+
     let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);
     tokio::spawn(async move {
         loop {
@@ -77,13 +78,14 @@ async fn create_date_module(date_label: Label) -> Box<dyn FnMut()> {
         }
     });
 
+    let label = date_label.clone();
     let idle_func = move || {
         if let Ok(s) = rx.try_recv() {
-            date_label.set_text(s.as_str());
+            label.set_text(s.as_str());
         }
     };
 
-    Box::new(idle_func)
+    (Box::new(idle_func), date_label)
 }
 
 fn init_layer_shell(window: &ApplicationWindow) {
