@@ -59,9 +59,7 @@ async fn activate(application: &gtk::Application) {
     window.add(&content_box);
 
     gtk::idle_add(move || {
-        for f in idle_functions.iter_mut() {
-            f();
-        }
+        idle_functions.iter_mut().for_each(|f| f());
 
         Continue(true)
     });
