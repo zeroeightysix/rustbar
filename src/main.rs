@@ -7,7 +7,7 @@ use std::{
 
 use futures::executor::block_on;
 use gio::prelude::*;
-use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+use gtk::{ApplicationWindow, prelude::*, WidgetExt, Label};
 use tokio::time::delay_for;
 
 // upgrade weak reference or return
@@ -53,23 +53,7 @@ async fn activate(application: &gtk::Application) {
     content_box.add(&date_label);
 
     let mut idle_functions = Vec::new();
-
-    let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
-    let idle_func = move || {
-        if let Ok(t) = rx.try_recv() {
-            date_label.set_text(format!("{}", t).as_str());
-        }
-    };
-    idle_functions.push(idle_func);
-
-    tokio::spawn(async move {
-        let mut c = 0;
-        loop {
-            delay_for(tokio::time::Duration::from_secs(1)).await;
-            c += 1;
-            let _ = tx.send(c).await;
-        }
-    });
+    idle_functions.push(create_date_module(date_label).await);
 
     window.add(&content_box);
 
@@ -82,6 +66,26 @@ async fn activate(application: &gtk::Application) {
     });
 
     window.show_all();
+}
+
+async fn create_date_module(date_label: Label) -> Box<dyn FnMut()> {
+    let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
+    let idle_func = move || {
+        if let Ok(t) = rx.try_recv() {
+            date_label.set_text(format!("{}", t).as_str());
+        }
+    };
+
+    tokio::spawn(async move {
+        let mut c = 0;
+        loop {
+            delay_for(tokio::time::Duration::from_secs(1)).await;
+            c += 1;
+            let _ = tx.send(c).await;
+        }
+    });
+
+    Box::new(idle_func)
 }
 
 fn init_layer_shell(window: &ApplicationWindow) {
