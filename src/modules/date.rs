@@ -14,7 +14,7 @@ pub struct DateModule {
 }
 
 fn default_format() -> String {
-    String::from("%H:%M:%S")
+    String::from("%a %d %b %H:%M")
 }
 
 #[async_trait]
