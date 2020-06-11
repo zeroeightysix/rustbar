@@ -9,13 +9,10 @@ use std::path::Path;
 
 use futures::executor::block_on;
 use gio::prelude::*;
-use gtk::{ApplicationWindow, prelude::*, WidgetExt};
+use gtk::{ApplicationWindow, Orientation, prelude::*, WidgetExt};
 use serde_json::json;
 
-use crate::{
-    config::Config,
-    layout::Group,
-};
+use crate::config::Config;
 
 mod modules;
 mod config;
@@ -51,14 +48,12 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
 
     init_layer_shell(&window, cfg);
 
-    let content = gtk::Fixed::new();
-    content.set_halign(gtk::Align::Fill);
+    let content = gtk::Box::new(Orientation::Horizontal, 0);
     window.add(&content);
 
     let mut idle_functions = Vec::new();
 
-    let layout: Group = (&cfg.layout).into();
-    layout.initialise_handlers(0, None, &content, &mut idle_functions);
+    cfg.layout.initialise_handlers(&content, &mut idle_functions);
 
     // GTK is non thread-safe, so all modules get a chance to do something on the main thread here.
     // Thus, it is expected that all modules only ever modify their widgets through the handler functions,

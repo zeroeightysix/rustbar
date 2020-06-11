@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use gtk::prelude::*;
+use gtk::{
+    Orientation,
+    prelude::*,
+};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
@@ -33,39 +37,30 @@ macro_rules! add_module {
     }
 }
 
+#[derive(Deserialize, Serialize, Eq, PartialEq, Hash, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum Position {
+    Left,
+    Centre,
+    Right,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum Group {
-    Positions(Box<HashMap<u8, Group>>),
+    Positions(Box<HashMap<Position, Group>>),
     // We never really keep the module struct around, so let's not try to do it here either
     Modules(Vec<Value>),
 }
 
-impl From<&Value> for Group {
-    fn from(v: &Value) -> Self {
-        if let Some(v) = v.as_array() {
-            Modules(v.clone())
-        } else if let Some(v) = v.as_object() {
-            Positions(box v.into_iter().map(|(key, value)| {
-                let key = match key.as_str() {
-                    "left" => 0,
-                    "center" => 50,
-                    "centre" => 50,
-                    "right" => 100,
-                    f => match f.parse() {
-                        Ok(f) => f,
-                        Err(e) => panic!("Positions must be numerical! {}", e)
-                    }
-                };
-                let value: Group = value.into();
-                (key, value)
-            }).collect())
-        } else {
-            panic!("Tried to create group from a Value that is not an array or object: {}", v)
-        }
+impl Default for Group {
+    fn default() -> Self {
+        Modules(Vec::default())
     }
 }
 
 impl Group {
-    pub fn initialise_handlers(&self, p: u8, parent: Option<&gtk::Fixed>, content: &gtk::Fixed, idle_functions: &mut Vec<Box<dyn FnMut()>>) {
+    pub fn initialise_handlers(&self, content: &gtk::Box, idle_functions: &mut Vec<Box<dyn FnMut()>>) {
         match self {
             Modules(modules) => {
                 for m in modules {
@@ -78,24 +73,16 @@ impl Group {
                         );
                     }
                 };
-                if let Some(parent) = parent {
-                    let parent = parent.clone(); // We need a static lifetime to move into the signal handler, which we create here by moving a (owned) clone
-                    let p = p as f64 / 100.;
-                    content.connect_size_allocate(move |c, alloc| {
-                        let parent_width = parent.get_allocated_width(); // TODO: what about rotated status bars?
-                        println!("parent width: {}", parent_width);
-                        println!("to {}", (p * (parent_width - alloc.width) as f64));
-                        let x = (p * (parent_width - alloc.width) as f64) as i32;
-                        println!("resize {} {:?} to {}", c.get_widget_name(), alloc, p);
-                        parent.move_(c, x, 0);
-                    });
-                }
             }
             Positions(map) => {
                 for (p, g) in map.iter() {
-                    let fixed = gtk::Fixed::new();
-                    content.add(&fixed);
-                    g.initialise_handlers(*p, Some(content), &fixed, idle_functions)
+                    let new = gtk::Box::new(Orientation::Horizontal, 0);
+                    match p {
+                        Position::Left => content.add(&new),
+                        Position::Centre => content.set_center_widget(Some(&new)),
+                        Position::Right => content.pack_end(&new, false, false, 0)
+                    };
+                    g.initialise_handlers(&new, idle_functions)
                 }
             }
         }

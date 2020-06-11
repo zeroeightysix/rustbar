@@ -2,7 +2,8 @@ use serde::{
     Deserialize,
     Serialize,
 };
-use serde_json::Value;
+
+use crate::layout::Group;
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
@@ -11,7 +12,7 @@ pub struct Config {
     #[serde(default)]
     pub margins: Margins,
     #[serde(default)]
-    pub layout: Value,
+    pub layout: Group,
 }
 
 #[derive(Deserialize, Serialize)]
