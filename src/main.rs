@@ -23,20 +23,6 @@ use crate::{
 mod modules;
 mod config;
 
-// upgrade weak reference or return
-#[macro_export]
-macro_rules! upgrade_weak {
-    ($x:ident, $r:expr) => {{
-        match $x.upgrade() {
-            Some(o) => o,
-            None => return $r,
-        }
-    }};
-    ($x:ident) => {
-        upgrade_weak!($x, ())
-    };
-}
-
 macro_rules! add_module {
     (
         $nm:expr,
@@ -80,7 +66,6 @@ async fn main() -> Result<(), std::io::Error> {
 
 async fn activate(application: &gtk::Application, cfg: &Config) {
     let window = gtk::ApplicationWindow::new(application);
-
     window.connect_delete_event(|_, _| {
         gtk::main_quit();
         Inhibit(false)
@@ -90,12 +75,14 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
 
     let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
     content_box.set_halign(gtk::Align::Fill);
+    window.add(&content_box);
 
     let mut idle_functions = Vec::new();
 
     for v in &cfg.modules {
         let name = &v["name"];
         if let Some(name) = name.as_str() {
+            // We use a macro here because the module is of varying type.
             add_module!(name, content_box, idle_functions, v,
                 "date" => DateModule;
                 "hello" => HelloModule
@@ -103,8 +90,9 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
         }
     }
 
-    window.add(&content_box);
-
+    // GTK is non thread-safe, so all modules get a chance to do something on the main thread here.
+    // Thus, it is expected that all modules only ever modify their widgets through the handler functions,
+    // and perform other asynchronous things using channels.
     gtk::idle_add(move || {
         idle_functions.iter_mut().for_each(|f| f());
 
@@ -114,6 +102,8 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
     window.show_all();
 }
 
+/// Initialises the window as a top-level layer shell window. Layer-shell is the protocol
+/// used for things like docks, notification windows, bars(!), etc.
 fn init_layer_shell(window: &ApplicationWindow, cfg: &Config) {
     gtk_layer_shell::init_for_window(window);
     gtk_layer_shell::set_layer(window, gtk_layer_shell::Layer::Top);
