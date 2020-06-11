@@ -65,23 +65,37 @@ impl From<&Value> for Group {
 }
 
 impl Group {
-    pub fn initialise_handlers(&self, content_box: &gtk::Box, idle_functions: &mut Vec<Box<dyn FnMut()>>) {
+    pub fn initialise_handlers(&self, p: u8, parent: Option<&gtk::Fixed>, content: &gtk::Fixed, idle_functions: &mut Vec<Box<dyn FnMut()>>) {
         match self {
             Modules(modules) => {
                 for m in modules {
                     if let Some(name) = m["name"].as_str() {
                         // We use a macro here because the module is of varying type.
-                        add_module!(name, content_box, idle_functions, m,
+                        add_module!(name, content, idle_functions, m,
                             "date" => DateModule;
                             "hello" => HelloModule;
                             "workspaces" => WorkspaceModule
                         );
                     }
+                };
+                if let Some(parent) = parent {
+                    let parent = parent.clone(); // We need a static lifetime to move into the signal handler, which we create here by moving a (owned) clone
+                    let p = p as f64 / 100.;
+                    content.connect_size_allocate(move |c, alloc| {
+                        let parent_width = parent.get_allocated_width(); // TODO: what about rotated status bars?
+                        println!("parent width: {}", parent_width);
+                        println!("to {}", (p * (parent_width - alloc.width) as f64));
+                        let x = (p * (parent_width - alloc.width) as f64) as i32;
+                        println!("resize {} {:?} to {}", c.get_widget_name(), alloc, p);
+                        parent.move_(c, x, 0);
+                    });
                 }
             }
             Positions(map) => {
-                for g in map.values() {
-                    g.initialise_handlers(content_box, idle_functions)
+                for (p, g) in map.iter() {
+                    let fixed = gtk::Fixed::new();
+                    content.add(&fixed);
+                    g.initialise_handlers(*p, Some(content), &fixed, idle_functions)
                 }
             }
         }

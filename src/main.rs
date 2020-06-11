@@ -51,14 +51,14 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
 
     init_layer_shell(&window, cfg);
 
-    let content_box = gtk::Box::new(gtk::Orientation::Horizontal, 16);
-    content_box.set_halign(gtk::Align::Fill);
-    window.add(&content_box);
+    let content = gtk::Fixed::new();
+    content.set_halign(gtk::Align::Fill);
+    window.add(&content);
 
     let mut idle_functions = Vec::new();
 
     let layout: Group = (&cfg.layout).into();
-    layout.initialise_handlers(&content_box, &mut idle_functions);
+    layout.initialise_handlers(0, None, &content, &mut idle_functions);
 
     // GTK is non thread-safe, so all modules get a chance to do something on the main thread here.
     // Thus, it is expected that all modules only ever modify their widgets through the handler functions,
