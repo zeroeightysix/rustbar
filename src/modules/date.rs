@@ -33,10 +33,10 @@ impl Module<Label> for DateModule {
         });
 
         let label = date_label.clone();
-        (Box::new(move || {
+        (box move || {
             if let Ok(s) = rx.try_recv() {
                 label.set_text(s.as_str());
             }
-        }), date_label)
+        }, date_label)
     }
 }

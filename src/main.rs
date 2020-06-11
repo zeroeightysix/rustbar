@@ -1,3 +1,4 @@
+#![feature(box_syntax)]
 extern crate gtk_layer_shell_rs as gtk_layer_shell;
 
 use std::{
