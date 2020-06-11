@@ -1,11 +1,11 @@
 use chrono::Local;
 use gtk::{Label, LabelExt};
+use serde::Deserialize;
+use tokio::time::delay_for;
 
 use async_trait::async_trait;
 
 use crate::modules::module::Module;
-use tokio::time::delay_for;
-use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct DateModule {
@@ -19,7 +19,7 @@ fn default_format() -> String {
 
 #[async_trait]
 impl Module<Label> for DateModule {
-    async fn into_widget_handler(self) -> (Box<dyn FnMut()>, Label) {
+    fn into_widget_handler(self) -> (Box<dyn FnMut()>, Label) {
         let date_label = gtk::Label::new(None);
 
         let (mut tx, mut rx) = tokio::sync::mpsc::channel(2);

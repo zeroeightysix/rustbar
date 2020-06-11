@@ -1,13 +1,11 @@
 use glib::IsA;
 use gtk::Widget;
-use async_trait::async_trait;
-use serde_json::Value;
 use serde::de::DeserializeOwned;
+use serde_json::Value;
 
-#[async_trait]
 pub trait Module<W>
     where W: IsA<Widget> {
-    async fn into_widget_handler(self) -> (Box<dyn FnMut()>, W);
+    fn into_widget_handler(self) -> (Box<dyn FnMut()>, W);
 
     fn from_value(v: &Value) -> Box<Self>
         where Self: DeserializeOwned {

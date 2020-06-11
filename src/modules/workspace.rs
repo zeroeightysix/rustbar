@@ -3,8 +3,6 @@ use ksway::{IpcCommand, IpcEvent};
 use serde::Deserialize;
 use tokio::task::block_in_place;
 
-use async_trait::async_trait;
-
 use crate::modules::module::Module;
 
 #[derive(Deserialize)]
@@ -20,12 +18,11 @@ struct WorkspaceEvent {
 #[derive(Deserialize, Debug)]
 struct Workspace {
     name: String,
-    focused: bool
+    focused: bool,
 }
 
-#[async_trait]
 impl Module<gtk::Label> for WorkspaceModule {
-    async fn into_widget_handler(self) -> (Box<dyn FnMut()>, gtk::Label) {
+    fn into_widget_handler(self) -> (Box<dyn FnMut()>, gtk::Label) {
         let content = gtk::Label::new(None);
 
         let mut sway = match ksway::client::Client::connect() {
@@ -33,7 +30,7 @@ impl Module<gtk::Label> for WorkspaceModule {
             Err(e) => panic!("Couldn't connect to sway: {}", e)
         };
 
-        let wp = block_in_place(|| {
+        let _ = block_in_place(|| {
             let wp = sway.ipc(IpcCommand::GetWorkspaces)?;
             let wp = String::from_utf8(wp).unwrap();
             let wp: Vec<Workspace> = serde_json::from_str(wp.as_str()).unwrap();

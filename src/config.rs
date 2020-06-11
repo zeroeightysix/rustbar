@@ -1,7 +1,8 @@
 use serde::{
     Deserialize,
-    Serialize
+    Serialize,
 };
+use serde_json::Value;
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
@@ -10,7 +11,7 @@ pub struct Config {
     #[serde(default)]
     pub margins: Margins,
     #[serde(default)]
-    pub modules: Vec<serde_json::Value>
+    pub layout: Value,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -31,7 +32,7 @@ impl Default for Anchors {
             top: true,
             bottom: false,
             left: true,
-            right: true
+            right: true,
         }
     }
 }
@@ -54,12 +55,14 @@ impl Default for Margins {
             top: 0,
             bottom: 0,
             left: 0,
-            right: 0
+            right: 0,
         }
     }
 }
 
 // I don't get why serde doesn't support literal defaults yet. Am I missing something?
 fn default_true() -> bool { true }
+
 fn default_false() -> bool { false }
+
 fn default_zero() -> i32 { 0 }
