@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use crate::modules::module::Module;
 use ksway::IpcEvent;
 use gtk::LabelExt;
+use tokio::task::block_in_place;
 
 #[derive(Deserialize)]
 pub struct WorkspaceModule {}
@@ -44,7 +45,8 @@ impl Module<gtk::Label> for WorkspaceModule {
                         let _ = tx.send(payload.current.unwrap().name).await;
                     }
                 }
-                sway.poll().unwrap(); // explicitly panic if an error occurs while polling
+                block_in_place(|| { sway.poll().unwrap() }); // poll() is blocking, block_in_place 'turns it async' (not really)
+                // it does however keep other async tasks from blocking as well.
             }
         });
 

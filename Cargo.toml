@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 gtk-layer-shell-rs = { path = "gtk-layer-shell-rs/" }
-tokio = { version = "0.2.21", features = ["macros", "rt-threaded", "time", "sync", "fs"] }
+tokio = { version = "0.2.21", features = ["macros", "rt-threaded", "time", "sync", "blocking"] }
 futures = "0.3.5"
 chrono = "0.4.11"
 async-trait = "0.1.35"
