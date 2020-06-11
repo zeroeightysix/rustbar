@@ -20,6 +20,7 @@ use crate::{
     },
     modules::hello::HelloModule,
 };
+use crate::modules::workspace::WorkspaceModule;
 
 mod modules;
 mod config;
@@ -86,7 +87,8 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
             // We use a macro here because the module is of varying type.
             add_module!(name, content_box, idle_functions, v,
                 "date" => DateModule;
-                "hello" => HelloModule
+                "hello" => HelloModule;
+                "workspaces" => WorkspaceModule
             );
         }
     }
