@@ -1,25 +1,26 @@
+use gtk::LabelExt;
+use ksway::{IpcCommand, IpcEvent};
 use serde::Deserialize;
+use tokio::task::block_in_place;
 
 use async_trait::async_trait;
 
 use crate::modules::module::Module;
-use ksway::IpcEvent;
-use gtk::LabelExt;
-use tokio::task::block_in_place;
 
 #[derive(Deserialize)]
 pub struct WorkspaceModule {}
 
 #[derive(Deserialize)]
-struct IPCWorkspacePayload {
+struct WorkspaceEvent {
     change: String,
     // old: Option<IPCWorkspace>,
-    current: Option<IPCWorkspace>,
+    current: Option<Workspace>,
 }
 
-#[derive(Deserialize)]
-struct IPCWorkspace {
-    name: String
+#[derive(Deserialize, Debug)]
+struct Workspace {
+    name: String,
+    focused: bool
 }
 
 #[async_trait]
@@ -32,6 +33,13 @@ impl Module<gtk::Label> for WorkspaceModule {
             Err(e) => panic!("Couldn't connect to sway: {}", e)
         };
 
+        let wp = block_in_place(|| {
+            let wp = sway.ipc(IpcCommand::GetWorkspaces)?;
+            let wp = String::from_utf8(wp).unwrap();
+            let wp: Vec<Workspace> = serde_json::from_str(wp.as_str()).unwrap();
+            Ok::<Vec<Workspace>, ksway::Error>(wp)
+        });
+
         let srx = sway.subscribe(vec![IpcEvent::Workspace]).unwrap();
         let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
         tokio::spawn(async move {
@@ -40,7 +48,7 @@ impl Module<gtk::Label> for WorkspaceModule {
                     // payload_type is always going to be workspace since it's the only event we subscribed to,
                     // but if we subscribe to something else in the future please also check payload_type
                     let payload = String::from_utf8(payload).unwrap();
-                    let payload: IPCWorkspacePayload = serde_json::from_str(payload.as_str()).unwrap();
+                    let payload: WorkspaceEvent = serde_json::from_str(payload.as_str()).unwrap();
                     if payload.change == "focus" {
                         let _ = tx.send(payload.current.unwrap().name).await;
                     }
