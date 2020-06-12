@@ -13,6 +13,7 @@ use gtk::{ApplicationWindow, Orientation, prelude::*, WidgetExt};
 use serde_json::json;
 
 use crate::config::Config;
+use tokio::task::block_in_place;
 
 mod modules;
 mod config;
@@ -51,20 +52,9 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
     let content = gtk::Box::new(Orientation::Horizontal, 0);
     window.add(&content);
 
-    let mut idle_functions = Vec::new();
+    cfg.layout.initialise_handlers(&content);
 
-    cfg.layout.initialise_handlers(&content, &mut idle_functions);
-
-    // GTK is non thread-safe, so all modules get a chance to do something on the main thread here.
-    // Thus, it is expected that all modules only ever modify their widgets through the handler functions,
-    // and perform other asynchronous things using channels.
-    gtk::idle_add(move || {
-        idle_functions.iter_mut().for_each(|f| f());
-
-        Continue(true)
-    });
-
-    window.show_all();
+    block_in_place(|| { window.show_all() });
 }
 
 /// Initialises the window as a top-level layer shell window. Layer-shell is the protocol

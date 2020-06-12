@@ -5,7 +5,7 @@ use serde_json::Value;
 
 pub trait Module<W>
     where W: IsA<Widget> {
-    fn into_widget_handler(self) -> (Box<dyn FnMut()>, W);
+    fn into_widget(self) -> W;
 
     fn from_value(v: &Value) -> Box<Self>
         where Self: DeserializeOwned {

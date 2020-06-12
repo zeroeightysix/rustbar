@@ -1,9 +1,10 @@
-use gtk::LabelExt;
+use gtk::{LabelExt, Label};
 use ksway::{IpcCommand, IpcEvent};
 use serde::Deserialize;
 use tokio::task::block_in_place;
 
 use crate::modules::module::Module;
+use glib::{Priority, Continue};
 
 #[derive(Deserialize)]
 pub struct WorkspaceModule {}
@@ -22,8 +23,8 @@ struct Workspace {
 }
 
 impl Module<gtk::Label> for WorkspaceModule {
-    fn into_widget_handler(self) -> (Box<dyn FnMut()>, gtk::Label) {
-        let content = gtk::Label::new(None);
+    fn into_widget(self) -> Label {
+        let content = Label::new(None);
 
         let mut sway = match ksway::client::Client::connect() {
             Ok(client) => client,
@@ -38,7 +39,8 @@ impl Module<gtk::Label> for WorkspaceModule {
         });
 
         let srx = sway.subscribe(vec![IpcEvent::Workspace]).unwrap();
-        let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
+        // let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
+        let (mut tx, mut rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
         tokio::spawn(async move {
             loop {
                 while let Ok((_, payload)) = srx.try_recv() {
@@ -47,7 +49,7 @@ impl Module<gtk::Label> for WorkspaceModule {
                     let payload = String::from_utf8(payload).unwrap();
                     let payload: WorkspaceEvent = serde_json::from_str(payload.as_str()).unwrap();
                     if payload.change == "focus" {
-                        let _ = tx.send(payload.current.unwrap().name).await;
+                        let _ = tx.send(payload.current.unwrap().name);
                     }
                 }
                 block_in_place(|| { sway.poll().unwrap() }); // poll() is blocking, block_in_place 'turns it async' (not really)
@@ -55,11 +57,14 @@ impl Module<gtk::Label> for WorkspaceModule {
             }
         });
 
-        let content_clone = content.clone();
-        (box move || {
-            if let Ok(name) = rx.try_recv() {
+        {
+            let content = content.clone();
+            rx.attach(None, move |name| {
                 content.set_text(name.as_str());
-            }
-        }, content_clone)
+                Continue(true)
+            });
+        }
+
+        content
     }
 }

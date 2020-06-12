@@ -11,7 +11,6 @@ use crate::{
     layout::Group::{Modules, Positions},
     modules::{
         date::DateModule,
-        hello::HelloModule,
         module::Module,
         workspace::WorkspaceModule,
     },
@@ -21,7 +20,6 @@ macro_rules! add_module {
     (
         $nm:expr,
         $cb:expr,
-        $fn:expr,
         $js:expr,
         $(
             $name:expr => $m:ident
@@ -29,8 +27,7 @@ macro_rules! add_module {
     ) => {
         $(
             if $nm == $name {
-                let (f, w) = $m::from_value($js).into_widget_handler();
-                $fn.push(f);
+                let w = $m::from_value($js).into_widget();
                 $cb.add(&w);
             }
         )*
@@ -60,15 +57,14 @@ impl Default for Group {
 }
 
 impl Group {
-    pub fn initialise_handlers(&self, content: &gtk::Box, idle_functions: &mut Vec<Box<dyn FnMut()>>) {
+    pub fn initialise_handlers(&self, content: &gtk::Box) {
         match self {
             Modules(modules) => {
                 for m in modules {
                     if let Some(name) = m["name"].as_str() {
                         // We use a macro here because the module is of varying type.
-                        add_module!(name, content, idle_functions, m,
+                        add_module!(name, content, m,
                             "date" => DateModule;
-                            "hello" => HelloModule;
                             "workspaces" => WorkspaceModule
                         );
                     }
@@ -82,7 +78,7 @@ impl Group {
                         Position::Centre => content.set_center_widget(Some(&new)),
                         Position::Right => content.pack_end(&new, false, false, 0)
                     };
-                    g.initialise_handlers(&new, idle_functions)
+                    g.initialise_handlers(&new)
                 }
             }
         }
