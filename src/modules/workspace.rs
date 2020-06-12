@@ -1,10 +1,10 @@
-use gtk::{LabelExt, Label};
+use glib::Continue;
+use gtk::{Label, LabelExt};
 use ksway::{IpcCommand, IpcEvent};
 use serde::Deserialize;
-use tokio::task::block_in_place;
+use tokio::task::{block_in_place, spawn_blocking};
 
 use crate::modules::module::Module;
-use glib::{Priority, Continue};
 
 #[derive(Deserialize)]
 pub struct WorkspaceModule {}
@@ -39,9 +39,8 @@ impl Module<gtk::Label> for WorkspaceModule {
         });
 
         let srx = sway.subscribe(vec![IpcEvent::Workspace]).unwrap();
-        // let (mut tx, mut rx) = tokio::sync::mpsc::channel(10);
-        let (mut tx, mut rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
-        tokio::spawn(async move {
+        let (tx, rx) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
+        spawn_blocking(move || {
             loop {
                 while let Ok((_, payload)) = srx.try_recv() {
                     // payload_type is always going to be workspace since it's the only event we subscribed to,
@@ -52,8 +51,7 @@ impl Module<gtk::Label> for WorkspaceModule {
                         let _ = tx.send(payload.current.unwrap().name);
                     }
                 }
-                block_in_place(|| { sway.poll().unwrap() }); // poll() is blocking, block_in_place 'turns it async' (not really)
-                // it does however keep other async tasks from blocking as well.
+                sway.poll().unwrap() // unwrap explicitly -> panic if polling fails
             }
         });
 
