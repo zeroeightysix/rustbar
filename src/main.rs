@@ -11,9 +11,9 @@ use futures::executor::block_on;
 use gio::prelude::*;
 use gtk::{ApplicationWindow, Orientation, prelude::*, WidgetExt};
 use serde_json::json;
+use tokio::task::block_in_place;
 
 use crate::config::Config;
-use tokio::task::block_in_place;
 
 mod modules;
 mod config;

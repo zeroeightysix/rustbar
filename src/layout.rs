@@ -13,6 +13,7 @@ use crate::{
         date::DateModule,
         module::Module,
         workspace::WorkspaceModule,
+        battery::BatteryModule
     },
 };
 
@@ -65,7 +66,8 @@ impl Group {
                         // We use a macro here because the module is of varying type.
                         add_module!(name, content, m,
                             "date" => DateModule;
-                            "workspaces" => WorkspaceModule
+                            "workspaces" => WorkspaceModule;
+                            "battery" => BatteryModule
                         );
                     }
                 };
