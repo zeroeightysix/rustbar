@@ -11,7 +11,6 @@ gtk-layer-shell-rs = { path = "gtk-layer-shell-rs/" }
 tokio = { version = "0.2.21", features = ["macros", "rt-threaded", "time", "sync", "blocking"] }
 futures = "0.3.5"
 chrono = "0.4.11"
-async-trait = "0.1.35"
 serde = { version = "1.0.111", features = ["derive"] }
 serde_json = "1.0.55"
 json5 = "0.2.7"

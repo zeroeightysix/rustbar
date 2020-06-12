@@ -7,8 +7,6 @@ use tokio::{
     time::delay_for,
 };
 
-use async_trait::async_trait;
-
 use crate::modules::module::Module;
 
 #[derive(Deserialize)]
@@ -21,7 +19,6 @@ fn default_format() -> String {
     String::from("%a %d %b %H:%M")
 }
 
-#[async_trait]
 impl Module<Label> for DateModule {
     fn into_widget(self) -> Label {
         let date = gtk::Label::new(None);
