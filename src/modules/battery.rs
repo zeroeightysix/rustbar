@@ -11,9 +11,39 @@ use tokio::{
 };
 
 use crate::modules::module::Module;
+use crate::modules::battery::BatteryFormat::Percentage;
 
 #[derive(Deserialize)]
-pub struct BatteryModule {}
+pub struct BatteryModule {
+    #[serde(default)]
+    format: BatteryFormat
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase", tag = "type", content = "precision")]
+enum BatteryFormat {
+    Percentage(usize),
+    Floating(usize)
+}
+
+impl Default for BatteryFormat {
+    fn default() -> Self {
+        Percentage(0)
+    }
+}
+
+impl BatteryFormat {
+    fn format(&self, input: f32) -> String {
+        match self {
+            BatteryFormat::Percentage(p) => {
+                format!("{:.*}%", p, input * 100.)
+            },
+            BatteryFormat::Floating(p) => {
+                format!("{:.*}", p, input)
+            }
+        }
+    }
+}
 
 impl Module<Label> for BatteryModule {
     fn into_widget(self) -> Label {
@@ -29,8 +59,9 @@ impl Module<Label> for BatteryModule {
                 None => panic!("Couldn't access batteries")
             };
 
+            let format = self.format;
             loop {
-                let _ = tx.send(format!("{:?}", battery.energy() / battery.energy_full()));
+                let _ = tx.send(format.format((battery.energy() / battery.energy_full()).value));
                 block_on(delay_for(Duration::from_secs(1)));
                 let _ = manager.refresh(&mut battery);
             }
