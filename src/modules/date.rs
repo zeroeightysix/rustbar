@@ -16,7 +16,7 @@ pub struct DateModule {
 }
 
 fn default_format() -> String {
-    String::from("%a %d %b %H:%M")
+    String::from("%I:%M:%S %P %A %d-%m-%Y")
 }
 
 impl Module<Label> for DateModule {
