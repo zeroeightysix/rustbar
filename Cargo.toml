@@ -25,3 +25,6 @@ git = "https://github.com/gtk-rs/gio"
 
 [dependencies.glib]
 git = "https://github.com/gtk-rs/glib"
+
+[dependencies.gdk]
+git = "https://github.com/gtk-rs/gdk"

@@ -9,7 +9,7 @@ use std::path::Path;
 
 use futures::executor::block_on;
 use gio::prelude::*;
-use gtk::{ApplicationWindow, Orientation, prelude::*, WidgetExt};
+use gtk::{ApplicationWindow, Orientation, prelude::*, WidgetExt, CssProvider, StyleContext};
 use serde_json::json;
 use tokio::task::block_in_place;
 
@@ -41,6 +41,14 @@ async fn main() -> Result<(), std::io::Error> {
 }
 
 async fn activate(application: &gtk::Application, cfg: &Config) {
+    let style_path = Path::new("style.css");
+    if style_path.exists() {
+        let provider = CssProvider::new();
+        provider.load_from_file(&gio::File::new_for_path(style_path)).expect("Couldn't load custom style");
+        StyleContext::add_provider_for_screen(&gdk::Screen::get_default().expect("Couldn't get default GDK screen"), &provider, 800);
+        println!("{}", "Applied custom style sheet!");
+    }
+
     let window = gtk::ApplicationWindow::new(application);
     window.connect_delete_event(|_, _| {
         gtk::main_quit();
