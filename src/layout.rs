@@ -29,6 +29,7 @@ macro_rules! add_module {
         $(
             if $nm == $name {
                 let w = $m::from_value($js).into_widget();
+                w.set_widget_name($name);
                 $cb.add(&w);
             }
         )*
