@@ -46,7 +46,7 @@ async fn activate(application: &gtk::Application, cfg: &Config) {
         let provider = CssProvider::new();
         provider.load_from_file(&gio::File::new_for_path(style_path)).expect("Couldn't load custom style");
         StyleContext::add_provider_for_screen(&gdk::Screen::get_default().expect("Couldn't get default GDK screen"), &provider, 800);
-        println!("{}", "Applied custom style sheet!");
+        println!("Applied custom style sheet!");
     }
 
     let window = gtk::ApplicationWindow::new(application);
