@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use glib::Continue;
-use gtk::{LabelExt, Orientation, ContainerExt, BoxExt, WidgetExt};
+use gtk::{LabelExt, Orientation, ContainerExt, BoxExt, WidgetExt, StyleContextExt};
 use ksway::{IpcCommand, IpcEvent};
 use serde::Deserialize;
 use tokio::task::{block_in_place, spawn_blocking};
@@ -83,11 +83,13 @@ impl Module<gtk::Box> for WorkspaceModule {
                 match event.change.as_ref() {
                     "focus" => {
                         let old = event.old.unwrap();
-                        wp_map.get(&old.num).unwrap().set_text(old.name.as_str());
+                        let old_label = wp_map.get(&old.num).unwrap();
+                        old_label.set_text(old.name.as_str());
+                        old_label.get_style_context().remove_class("focused");
 
                         let current = event.current.unwrap();
                         let current_label = wp_map.get(&current.num).unwrap();
-                        current_label.set_text(format!(" F{}F ", current.name).as_str());
+                        current_label.get_style_context().add_class("focused");
 
                         if current_label.get_parent().is_none() {
                             content.add(current_label);
