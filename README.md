@@ -1,16 +1,11 @@
 # rustbar
-A wayland status bar written in pure rust, aimed at tiling window managers.
 
-## Current state of project
-Unless you plan to contribute or look at the code, ignore this repository.
-The application is not useful yet.
+Abandoned, try this instead:
 
-### Aim
-`rustbar` aims to provide a status bar that is highly configurable, performant and pretty. Bars like `waybar`, `i3bar`, `polybar` seem to focus on more simplistic components: a date is just a date, and changing it should be done through the configuration.
+https://github.com/JakeStanger/ironbar
 
-This project aims to go further than that and provide an experience more like a DE's taskbar, where components offer the functionality to edit them in the GUI itself, etc.
+## Compile & run
 
-## Compile
 Assuming you have `git`, `cargo` and [gtk-layer-shell](https://github.com/wmww/gtk-layer-shell) installed:
 ```
 git clone https://github.com/zeroeightysix/rustbar
